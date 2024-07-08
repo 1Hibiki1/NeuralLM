@@ -1,3 +1,7 @@
+#####################
+# the modification is in NeuralBertModel.encoder which I modified to use VNN instead of bert encoder
+#####################
+
 import torch
 from torch import nn
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss
@@ -44,8 +48,9 @@ class NeuralBertModel(BertPreTrainedModel):
         self.config = config
 
         self.embeddings = BertEmbeddings(config)
+        N_LAYERS = 3    # (including input layer)
         self.encoder = VNN(
-            [config.max_position_embeddings]*3,
+            [config.max_position_embeddings]*N_LAYERS,
         )
 
         self.pooler = BertPooler(config) if add_pooling_layer else None
@@ -430,8 +435,10 @@ class NeuralBertForSequenceClassification(BertPreTrainedModel):
             attentions=outputs.attentions,
         )
 
+
 class NeuralBertForMaskedLM(BertPreTrainedModel):
-    _tied_weights_keys = ["predictions.decoder.bias", "cls.predictions.decoder.weight"]
+    _tied_weights_keys = ["predictions.decoder.bias",
+                          "cls.predictions.decoder.weight"]
 
     def __init__(self, config):
         super().__init__(config)
@@ -493,7 +500,8 @@ class NeuralBertForMaskedLM(BertPreTrainedModel):
         masked_lm_loss = None
         if labels is not None:
             loss_fct = CrossEntropyLoss()  # -100 index = padding token
-            masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
+            masked_lm_loss = loss_fct(
+                prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
 
         if not return_dict:
             output = (prediction_scores,) + outputs[2:]
@@ -514,7 +522,8 @@ class NeuralBertForMaskedLM(BertPreTrainedModel):
         if self.config.pad_token_id is None:
             raise ValueError("The PAD token should be defined for generation")
 
-        attention_mask = torch.cat([attention_mask, attention_mask.new_zeros((attention_mask.shape[0], 1))], dim=-1)
+        attention_mask = torch.cat(
+            [attention_mask, attention_mask.new_zeros((attention_mask.shape[0], 1))], dim=-1)
         dummy_token = torch.full(
             (effective_batch_size, 1), self.config.pad_token_id, dtype=torch.long, device=input_ids.device
         )

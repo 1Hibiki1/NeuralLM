@@ -11,8 +11,11 @@ class VNN(nn.Module):
             weights = torch.Tensor(layer_config[i+1], layer_config[i])
             nn.init.xavier_uniform_(weights)
             self.layers.append(weights.to('mps'))
+
         self.layers = nn.ParameterList(self.layers)
-        self.layers.to('mps') # transformers likes to use GPU, will have to change this to cuda once we switch platforms
+
+        # transformers likes to use GPU, will have to change this to cuda once we switch platforms
+        self.layers.to('mps')
 
     def forward(self, inputs):
         output = inputs
@@ -20,7 +23,7 @@ class VNN(nn.Module):
             output = torch.matmul(layer, output)
             output += inputs
             output = (output / torch.norm(output, p=2, dim=1, keepdim=True))
-            
+
         return output
 
 
