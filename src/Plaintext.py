@@ -1,23 +1,30 @@
-# train on plain text
-
-from NeuralBERT import NeuralBertForMaskedLM
-from transformers import BertTokenizer, BertConfig, DataCollatorForLanguageModeling, Trainer, TrainingArguments, BertForMaskedLM
-from datasets import load_dataset, Dataset
 import numpy as np
+import torch
+import random
 
+np.random.seed(42)
+torch.manual_seed(42)
+random.seed(42)
+
+import matplotlib.pyplot as plt
+from transformers import TrainingArguments, Trainer, BertForMaskedLM, BertTokenizer, BertConfig, DataCollatorForLanguageModeling
+from datasets import Dataset
+from NeuralBERT import NeuralBertForMaskedLM
+
+# Load your data
 with open('../data/data.txt', 'r', encoding='utf-8') as f:
     text_data = f.read()
 
 dataset = Dataset.from_dict({'text': text_data.split('\n')})
 
+# Initialize tokenizer and configuration
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 configuration = BertConfig()
+
 def tokenize_function(examples):
     return tokenizer(examples['text'], truncation=True, padding='max_length', max_length=512, return_special_tokens_mask=True)
 
-
-tokenized_dataset = dataset.map(
-    tokenize_function, batched=True, remove_columns=['text'])
+tokenized_dataset = dataset.map(tokenize_function, batched=True, remove_columns=['text'])
 
 data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer,
@@ -25,61 +32,40 @@ data_collator = DataCollatorForLanguageModeling(
     mlm_probability=0.15
 )
 
-MODEL_NAME = "VNN0"
+# Training arguments
+training_args = TrainingArguments(
+    output_dir='./results',
+    overwrite_output_dir=True,
+    num_train_epochs=100,
+    per_device_train_batch_size=8,
+    save_steps=10_000,
+    save_total_limit=2,
+    logging_dir='./logs',  # Directory for storing logs
+    logging_steps=1
+)
 
-path = f"../models/{MODEL_NAME}"
-
-# print('-'*80)
-# print("\nBERT:")
-# training_args = TrainingArguments(
-#     output_dir='./results',
-#     overwrite_output_dir=True,
-#     num_train_epochs=100,
-#     per_device_train_batch_size=8,
-#     save_steps=10_000,
-#     save_total_limit=2,
-# )
-
+## BERT
 # model = BertForMaskedLM(configuration)
-# # model = BertForMaskedLM.from_pretrained(path)
-
-# total_params = sum(p.numel() for p in model.parameters())
-# print(f"Number of parameters: {total_params}")
 
 # trainer = Trainer(
 #     model=model,
 #     args=training_args,
 #     data_collator=data_collator,
-#     train_dataset=tokenized_dataset,
+#     train_dataset=tokenized_dataset
 # )
 
 # trainer.train()
 
-print('-'*80)
-print("\nOURS:")
-training_args = TrainingArguments(
-    output_dir='./results',
-    overwrite_output_dir=True,
-    num_train_epochs=200,
-    per_device_train_batch_size=8,
-    save_steps=10_000,
-    save_total_limit=2,
-)
+## OUR MODEL
+training_args.num_train_epochs = 400
 
 model = NeuralBertForMaskedLM(configuration)
-# model = NeuralBertForMaskedLM.from_pretrained(path)
-
-total_params = sum(p.numel() for p in model.parameters())
-print(f"Number of parameters: {total_params}")
 
 trainer = Trainer(
     model=model,
     args=training_args,
     data_collator=data_collator,
-    train_dataset=tokenized_dataset,
+    train_dataset=tokenized_dataset
 )
 
 trainer.train()
-
-# model.save_pretrained(path)
-# tokenizer.save_pretrained(path)
