@@ -21,7 +21,7 @@ from transformers.modeling_attn_mask_utils import (
 )
 from typing import List, Optional, Tuple, Union
 
-from NeuralLM import VectorNeuralNetwork
+from NeuralLM import VNN
 
 
 class NeuralBertModel(BertPreTrainedModel):
@@ -44,9 +44,8 @@ class NeuralBertModel(BertPreTrainedModel):
         self.config = config
 
         self.embeddings = BertEmbeddings(config)
-        self.encoder = VectorNeuralNetwork(
-            [config.max_position_embeddings, 4, config.max_position_embeddings],
-            config.hidden_size
+        self.encoder = VNN(
+            [config.max_position_embeddings]*3,
         )
 
         self.pooler = BertPooler(config) if add_pooling_layer else None
@@ -217,25 +216,11 @@ class NeuralBertModel(BertPreTrainedModel):
         head_mask = self.get_head_mask(
             head_mask, self.config.num_hidden_layers)
 
-        # encoder_outputs = self.encoder(
-        #     embedding_output,
-        #     attention_mask=extended_attention_mask,
-        #     head_mask=head_mask,
-        #     encoder_hidden_states=encoder_hidden_states,
-        #     encoder_attention_mask=encoder_extended_attention_mask,
-        #     past_key_values=past_key_values,
-        #     use_cache=use_cache,
-        #     output_attentions=output_attentions,
-        #     output_hidden_states=output_hidden_states,
-        #     return_dict=return_dict,
-        # )
-        # sequence_output = encoder_outputs[0]
-
         sequence_output = list()
-        for i, b in enumerate(embedding_output):
-            enc = self.encoder(*b)
-            enc = embedding_output[i] * enc
-            enc = (enc / torch.norm(enc, dim=1, keepdim=True))
+        for batch in embedding_output:
+            enc = self.encoder(batch)
+            # enc = batch * enc
+            # enc = (enc / torch.norm(enc, dim=1, keepdim=True))
             sequence_output.append(enc)
         sequence_output = torch.stack(sequence_output)
 
