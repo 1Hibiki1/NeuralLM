@@ -39,7 +39,7 @@ data_collator = DataCollatorForLanguageModeling(
 training_args = TrainingArguments(
     output_dir='./results',
     overwrite_output_dir=True,
-    num_train_epochs=1000,
+    num_train_epochs=10,
     per_device_train_batch_size=8,
     save_steps=10_000,
     save_total_limit=2,
@@ -67,7 +67,7 @@ training_args = TrainingArguments(
 # ------------------------------------------------------------------
 # OUR MODEL
 
-path = "../models/NBERT2_1k"
+# path = "../models/NBERT2_1k"
 # training_args.num_train_epochs = 1000
 
 model = NeuralBertForMaskedLM(configuration)
@@ -83,5 +83,5 @@ trainer = Trainer(
 trainer.train()
 # ------------------------------------------------------------------
 
-model.save_pretrained(path)
-tokenizer.save_pretrained(path)
+# model.save_pretrained(path)
+# tokenizer.save_pretrained(path)

@@ -155,7 +155,7 @@ training_args = TrainingArguments(
     logging_steps=1,
     output_dir=CHECKPOINT_DIR,
     optim="adamw_torch",
-    max_steps=5000,
+    # max_steps=2500,
     # report_to="wandb",
 )
 Trainer._get_train_sampler = lambda _: None  # prevent shuffling the dataset again
@@ -171,3 +171,7 @@ with MagicTimer() as timer:
 print(f"Trained model in {timer}.")
 trainer.save_model(str(MODEL_DIR))
 TRAINER_HISTORY_PATH.write_text(json.dumps(trainer.state.log_history))
+
+path = "../models/NBERT7_Wiki_Full"
+model.save_pretrained(path)
+tokenizer.save_pretrained(path)

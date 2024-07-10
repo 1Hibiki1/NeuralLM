@@ -224,13 +224,7 @@ class NeuralBertModel(BertPreTrainedModel):
         head_mask = self.get_head_mask(
             head_mask, self.config.num_hidden_layers)
 
-        sequence_output = list()
-        for batch in embedding_output:
-            enc = self.encoder(batch)
-            # enc = batch * enc
-            # enc = (enc / torch.norm(enc, dim=1, keepdim=True))
-            sequence_output.append(enc)
-        sequence_output = torch.stack(sequence_output)
+        sequence_output = self.encoder(embedding_output)
 
         pooled_output = self.pooler(
             sequence_output) if self.pooler is not None else None

@@ -10,11 +10,9 @@ class VNN(nn.Module):
         for i in range(len(layer_config) - 1):
             weights = torch.Tensor(layer_config[i+1], layer_config[i])
             nn.init.xavier_uniform_(weights)
-            self.layers.append(weights.to(device))
+            self.layers.append(weights)
 
         self.layers = nn.ParameterList(self.layers)
-
-        # transformers likes to use GPU, will have to change this to cuda once we switch platforms
         self.layers.to(device)
 
     def forward(self, inputs):
@@ -22,7 +20,7 @@ class VNN(nn.Module):
         for layer in self.layers:
             output = torch.matmul(layer, output)
         output += inputs
-        output = (output / torch.norm(output, p=2, dim=1, keepdim=True))
+        output = (output / torch.norm(output, p=2, dim=2, keepdim=True))
 
         return output
 
