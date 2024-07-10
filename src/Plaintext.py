@@ -52,7 +52,8 @@ training_args = TrainingArguments(
 
 # path = "../models/BERT_2k"
 # model = BertForMaskedLM(configuration)
-
+# total_params = sum(p.numel() for p in model.parameters())
+# print(f"Number of parameters: {total_params}")
 # trainer = Trainer(
 #     model=model,
 #     args=training_args,
@@ -73,6 +74,8 @@ training_args = TrainingArguments(
 model = NeuralBertForMaskedLM(configuration)
 # model = NeuralBertForMaskedLM.from_pretrained(path)
 
+total_params = sum(p.numel() for p in model.parameters())
+print(f"Number of parameters: {total_params}")
 trainer = Trainer(
     model=model,
     args=training_args,
