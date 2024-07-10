@@ -27,6 +27,7 @@ from typing import List, Optional, Tuple, Union
 
 from NeuralLM import VNN
 
+device = 'cuda'
 
 class NeuralBertModel(BertPreTrainedModel):
     """
@@ -48,9 +49,11 @@ class NeuralBertModel(BertPreTrainedModel):
         self.config = config
 
         self.embeddings = BertEmbeddings(config)
-        N_LAYERS = 3    # (including input layer)
+        N_LAYERS = 7    # (including input layer)
         self.encoder = VNN(
             [config.max_position_embeddings]*N_LAYERS,
+            # [config.max_position_embeddings, 1024, 1024, config.max_position_embeddings],
+            device
         )
 
         self.pooler = BertPooler(config) if add_pooling_layer else None
