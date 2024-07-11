@@ -101,8 +101,8 @@ model_config = BertConfig(
     attention_probs_dropout_prob=0,  # cramming says no dropout
     hidden_dropout_prob=0,  # cramming says no dropout
 )
-# model = BertForMaskedLM(model_config)
-model = NeuralBertForMaskedLM(model_config)
+model = BertForMaskedLM(model_config)
+# model = NeuralBertForMaskedLM(model_config)
 print("Parameters:", sum(p.numel() for p in model.parameters()))
 
 tokenizer = BertTokenizerFast(tokenizer_file=str(TOKENIZER_PATH))
@@ -155,7 +155,7 @@ training_args = TrainingArguments(
     logging_steps=1,
     output_dir=CHECKPOINT_DIR,
     optim="adamw_torch",
-    # max_steps=2500,
+    max_steps=2500,
     # report_to="wandb",
 )
 Trainer._get_train_sampler = lambda _: None  # prevent shuffling the dataset again
