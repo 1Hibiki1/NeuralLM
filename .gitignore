@@ -168,3 +168,4 @@ models
 **/wandb
 **/logs
 src/data
+src/wiki_model

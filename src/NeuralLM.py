@@ -20,9 +20,6 @@ class VNN(nn.Module):
         output = inputs
         for layer in self.layers:
             output = torch.matmul(layer, output)
-        output += inputs
-        output = (output / torch.norm(output, p=2, dim=2, keepdim=True))
-
         return output
 
 
@@ -31,15 +28,19 @@ class NeuralLMBlock(nn.Module):
         super(NeuralLMBlock, self).__init__()
         self.vnn = VNN(layer_config, device=device)
         up_proj_factor = 1.5
-        self.up_proj = nn.Linear(dim, int(dim*up_proj_factor))
-        self.down_proj = nn.Linear(int(dim*up_proj_factor), dim)
+        self.ffn = nn.Sequential(
+            nn.Linear(dim, int(dim*up_proj_factor)),
+            nn.Linear(int(dim*up_proj_factor), dim)
+        )
 
     def forward(self, inputs):
         output = inputs
-        output = self.vnn(output)
-        output = self.up_proj(output)
-        output = self.down_proj(output)
+        output = self.norm(output + self.vnn(output))
+        output = self.ffn(output)
         return output
+    
+    def norm(self, inputs):
+        return (inputs / torch.norm(inputs, p=2, dim=2, keepdim=True))
 
 
 class NeuralLMEncoder(nn.Module):
