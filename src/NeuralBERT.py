@@ -30,6 +30,7 @@ from NeuralLM import VNN, NeuralLMBlock, NeuralLMEncoder
 device = 'mps' if torch.backends.mps.is_available() else 'cpu'
 device = 'cuda' if torch.cuda.is_available() else device
 
+
 class NeuralBertModel(BertPreTrainedModel):
     """
 
@@ -52,22 +53,11 @@ class NeuralBertModel(BertPreTrainedModel):
         self.embeddings = BertEmbeddings(config)
         N_LAYERS = 5    # (including input layer)
         N_BLOCKS = 3
-        # self.encoder = VNN(
-        #     [config.max_position_embeddings]*N_LAYERS,
-        #     # [config.max_position_embeddings, 1024, 1024, config.max_position_embeddings],
-        #     device
-        # )
-        # self.encoder = NeuralLMBlock(
-        #     [config.max_position_embeddings]*N_LAYERS,
-        #     config.hidden_size,
-        #     # [config.max_position_embeddings, 1024, 1024, config.max_position_embeddings],
-        #     device
-        # )
         self.encoder = NeuralLMEncoder(
-            [config.max_position_embeddings]*N_LAYERS,
+            # [config.max_position_embeddings]*N_LAYERS,
+            [config.max_position_embeddings, 1024, 1024, 1024, config.max_position_embeddings],
             config.hidden_size,
             N_BLOCKS,
-            # [config.max_position_embeddings, 1024, 1024, config.max_position_embeddings],
             device
         )
 
