@@ -36,88 +36,92 @@ with open('../data/data.txt', 'r', encoding='utf-8') as f:
     text_data = f.read()
 
 
-dataset = Dataset.from_dict({'text': text_data.split('. ')})
+dataset = Dataset.from_dict({'text': text_data})
 
 
-# tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-tokenizer = BertWordPieceTokenizer()
-tokenizer._tokenizer.normalizer = normalizers.Sequence(
-    [
-        normalizers.Replace(Regex("(``|'')"), '"'),
-        normalizers.NFD(),
-        normalizers.Lowercase(),
-        normalizers.StripAccents(),
-        normalizers.Replace(Regex(" {2,}"), " "),
-        normalizers.Replace(Regex(r"[^\x00-\x7F]+"), ""),
-    ]
-)
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
+# tokenizer = BertWordPieceTokenizer()
+# tokenizer._tokenizer.normalizer = normalizers.Sequence(
+#     [
+#         normalizers.Replace(Regex("(``|'')"), '"'),
+#         normalizers.NFD(),
+#         normalizers.Lowercase(),
+#         normalizers.StripAccents(),
+#         normalizers.Replace(Regex(" {2,}"), " "),
+#         normalizers.Replace(Regex(r"[^\x00-\x7F]+"), ""),
+#     ]
+# )
 
 
-def tokenizer_training_data():
-    for i in tqdm(
-        range(min(NUM_TOKENIZER_TRAINING_ITEMS, len(dataset))),
-        desc="Feeding samples to tokenizer",
-    ):
-        yield dataset[i]["text"]
+# def tokenizer_training_data():
+#     for i in tqdm(
+#         range(min(NUM_TOKENIZER_TRAINING_ITEMS, len(dataset))),
+#         desc="Feeding samples to tokenizer",
+#     ):
+#         yield dataset[i]["text"]
 
 
-with MagicTimer() as timer:
-    tokenizer.train_from_iterator(
-        tokenizer_training_data(),
-        vocab_size=VOCAB_SIZE,
-        min_frequency=2,
-    )
-print(f"Tokenizer trained in {timer}.")
-tokenizer.save(str(TOKENIZER_PATH))
+# with MagicTimer() as timer:
+#     tokenizer.train_from_iterator(
+#         tokenizer_training_data(),
+#         vocab_size=VOCAB_SIZE,
+#         min_frequency=2,
+#     )
+# print(f"Tokenizer trained in {timer}.")
+# tokenizer.save(str(TOKENIZER_PATH))
+# tokenizer = BertTokenizerFast(tokenizer_file=str(TOKENIZER_PATH))
 
 configuration = BertConfig(
     vocab_size=VOCAB_SIZE,
     max_position_embeddings=MODEL_MAX_SEQ_LEN,
 )
-tokenizer = BertTokenizerFast(tokenizer_file=str(TOKENIZER_PATH))
 
-# def tokenize_function(examples):
-#     return tokenizer(examples['text'], truncation=True, padding='max_length', max_length=MODEL_MAX_SEQ_LEN, return_special_tokens_mask=True)
-
-
-# tokenized_dataset = dataset.map(
-#     tokenize_function, batched=True, remove_columns=['text'])
+def tokenize_function(examples):
+    return tokenizer(examples['text'], truncation=True, padding='max_length', max_length=MODEL_MAX_SEQ_LEN, return_special_tokens_mask=True)
 
 
-class TokenizedDataset(torch.utils.data.Dataset):
-    "This wraps the dataset and tokenizes it, ready for the model"
+tokenized_dataset = dataset.map(
+    tokenize_function, batched=True, remove_columns=['text'])
 
-    def __init__(self, dataset, tokenizer):
-        self.dataset = dataset
-        self.tokenizer = tokenizer
 
-    def __len__(self):
-        return len(self.dataset)
+# class TokenizedDataset(torch.utils.data.Dataset):
+#     "This wraps the dataset and tokenizes it, ready for the model"
 
-    def __getitem__(self, i):
-        return self.tokenizer.encode(
-            self.dataset[i]["text"],
-            return_tensors="pt",
-            truncation=True,
-            max_length=MODEL_MAX_SEQ_LEN,
-            padding="max_length",
-            return_special_tokens_mask=True,
-        )[0, ...]
+#     def __init__(self, dataset, tokenizer):
+#         self.dataset = dataset
+#         self.tokenizer = tokenizer
 
-def train_val_dataset(dataset, val_split=0.25):
-    train_idx, val_idx = train_test_split(list(range(len(dataset))), test_size=val_split)
-    datasets = {}
-    datasets['train'] = Subset(dataset, train_idx)
-    datasets['test'] = Subset(dataset, val_idx)
-    return datasets
+#     def __len__(self):
+#         return len(self.dataset)
 
-tokenized_dataset = TokenizedDataset(dataset, tokenizer)
+#     def __getitem__(self, i):
+#         return self.tokenizer.encode(
+#             self.dataset[i]["text"],
+#             return_tensors="pt",
+#             truncation=True,
+#             max_length=MODEL_MAX_SEQ_LEN,
+#             padding="max_length",
+#             return_special_tokens_mask=True,
+#         )[0, ...]
+
+# def train_val_dataset(dataset, val_split=0.25):
+#     train_idx, val_idx = train_test_split(list(range(len(dataset))), test_size=val_split)
+#     datasets = {}
+#     datasets['train'] = Subset(dataset, train_idx)
+#     datasets['test'] = Subset(dataset, val_idx)
+#     return datasets
+
+# tokenized_dataset = TokenizedDataset(dataset, tokenizer)
 
 # train_test_split = tokenized_dataset.train_test_split(test_size=0.25)
-train_test_split = train_val_dataset(tokenized_dataset)
+# train_test_split = train_val_dataset(tokenized_dataset)
 
-train_dataset = train_test_split['train']
-test_dataset = train_test_split['test']
+# train_dataset = train_test_split['train']
+# test_dataset = train_test_split['test']
+
+train_dataset = tokenized_dataset
+test_dataset = tokenized_dataset
 
 data_collator = DataCollatorForLanguageModeling(
     tokenizer=tokenizer,
@@ -151,7 +155,7 @@ def compute_metrics(eval_pred):
 training_args = TrainingArguments(
     output_dir='./results',
     overwrite_output_dir=True,
-    num_train_epochs=100,
+    num_train_epochs=10,
     per_device_train_batch_size=8,
     save_steps=10_000,
     save_total_limit=2,
@@ -159,7 +163,7 @@ training_args = TrainingArguments(
     logging_steps=1,
     # eval_steps=5,
     # max_steps=100,
-    evaluation_strategy='epoch'
+    # evaluation_strategy='epoch'
 )
 
 # ------------------------------------------------------------------
@@ -198,7 +202,7 @@ trainer = Trainer(
     data_collator=data_collator,
     train_dataset=train_dataset,
     eval_dataset=test_dataset,
-    compute_metrics=compute_metrics,
+    # compute_metrics=compute_metrics,
 )
 
 trainer.train()

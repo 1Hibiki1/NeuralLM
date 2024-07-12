@@ -101,8 +101,8 @@ model_config = BertConfig(
     attention_probs_dropout_prob=0,  # cramming says no dropout
     hidden_dropout_prob=0,  # cramming says no dropout
 )
-model = BertForMaskedLM(model_config)
-# model = NeuralBertForMaskedLM(model_config)
+# model = BertForMaskedLM(model_config)
+model = NeuralBertForMaskedLM(model_config)
 print("Parameters:", sum(p.numel() for p in model.parameters()))
 
 tokenizer = BertTokenizerFast(tokenizer_file=str(TOKENIZER_PATH))
@@ -172,6 +172,6 @@ print(f"Trained model in {timer}.")
 trainer.save_model(str(MODEL_DIR))
 TRAINER_HISTORY_PATH.write_text(json.dumps(trainer.state.log_history))
 
-path = "../models/NBERT7_Wiki_Full"
+path = "../models/NBERT_7_Wiki_2500"
 model.save_pretrained(path)
 tokenizer.save_pretrained(path)

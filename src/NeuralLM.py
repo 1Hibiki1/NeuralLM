@@ -10,7 +10,7 @@ class VNN(nn.Module):
         self.layers = list()
         for i in range(len(layer_config) - 1):
             weights = torch.Tensor(layer_config[i+1], layer_config[i])
-            nn.init.xavier_uniform_(weights)
+            nn.init.xavier_normal_(weights)
             self.layers.append(weights)
 
         self.layers = nn.ParameterList(self.layers)
@@ -28,15 +28,19 @@ class NeuralLMBlock(nn.Module):
         super(NeuralLMBlock, self).__init__()
         self.vnn = VNN(layer_config, device=device)
         up_proj_factor = 1.5
+        self.ln1 = nn.LayerNorm(dim)
         self.ffn = nn.Sequential(
             nn.Linear(dim, int(dim*up_proj_factor)),
-            nn.Linear(int(dim*up_proj_factor), dim)
+            nn.GELU(),
+            nn.Linear(int(dim*up_proj_factor), dim),
+            nn.Dropout(0.2)
         )
+        self.ln2 = nn.LayerNorm(dim)
 
     def forward(self, inputs):
         output = inputs
-        output = self.norm(output + self.vnn(output))
-        output = self.ffn(output)
+        output = self.ln1(output + self.vnn(output))
+        output = self.ln2(output + self.ffn(output))
         return output
     
     def norm(self, inputs):
@@ -47,7 +51,8 @@ class NeuralLMEncoder(nn.Module):
     def __init__(self, layer_config, dim, n_blocks, device='cpu'):
         super(NeuralLMEncoder, self).__init__()
         self.blocks = nn.ModuleList(
-            [NeuralLMBlock(layer_config, dim, device=device) for _ in range(n_blocks)])
+            [NeuralLMBlock(layer_config, dim, device=device) for _ in range(n_blocks)]
+        )
 
     def forward(self, inputs):
         output = inputs
