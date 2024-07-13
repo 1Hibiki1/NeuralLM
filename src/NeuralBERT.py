@@ -27,15 +27,6 @@ from typing import List, Optional, Tuple, Union
 
 from NeuralLM import VNN, NeuralLMBlock, NeuralLMEncoder
 
-device = (
-    "cuda"
-    if torch.cuda.is_available()
-    else "mps"
-    if torch.backends.mps.is_available()
-    else "cpu"
-)
-print(f"Using {device} device")
-
 
 class NeuralBertModel(BertPreTrainedModel):
     """
@@ -63,8 +54,7 @@ class NeuralBertModel(BertPreTrainedModel):
             # [config.max_position_embeddings]*N_LAYERS,
             [config.max_position_embeddings, 1024, 1024, config.max_position_embeddings],
             config.hidden_size,
-            N_BLOCKS,
-            device
+            N_BLOCKS
         )
 
         self.pooler = BertPooler(config) if add_pooling_layer else None

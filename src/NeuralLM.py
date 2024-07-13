@@ -4,7 +4,7 @@ from kan import KANLinear
 
 
 class VNN(nn.Module):
-    def __init__(self, layer_config, device='cpu'):
+    def __init__(self, layer_config):
         super(VNN, self).__init__()
 
         self.layers = list()
@@ -14,7 +14,6 @@ class VNN(nn.Module):
             self.layers.append(weights)
 
         self.layers = nn.ParameterList(self.layers)
-        self.layers.to(device)
 
     def forward(self, inputs):
         output = inputs
@@ -24,9 +23,9 @@ class VNN(nn.Module):
 
 
 class NeuralLMBlock(nn.Module):
-    def __init__(self, layer_config, dim, device='cpu'):
+    def __init__(self, layer_config, dim):
         super(NeuralLMBlock, self).__init__()
-        self.vnn = VNN(layer_config, device=device)
+        self.vnn = VNN(layer_config)
         up_proj_factor = 1.5
         self.ln1 = nn.LayerNorm(dim)
         self.ffn = nn.Sequential(
@@ -47,10 +46,10 @@ class NeuralLMBlock(nn.Module):
 
 
 class NeuralLMEncoder(nn.Module):
-    def __init__(self, layer_config, dim, n_blocks, device='cpu'):
+    def __init__(self, layer_config, dim, n_blocks):
         super(NeuralLMEncoder, self).__init__()
         self.blocks = nn.ModuleList(
-            [NeuralLMBlock(layer_config, dim, device=device) for _ in range(n_blocks)]
+            [NeuralLMBlock(layer_config, dim) for _ in range(n_blocks)]
         )
 
     def forward(self, inputs):

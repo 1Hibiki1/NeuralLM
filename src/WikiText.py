@@ -28,6 +28,18 @@ from transformers import (
 )
 from NeuralBERT import NeuralBertForMaskedLM
 
+device = (
+    "cuda"
+    if torch.cuda.is_available()
+    else "mps"
+    if torch.backends.mps.is_available()
+    else "cpu"
+)
+print(f"Using {device} device")
+
+# if using a100 or h100, makes much faster (?)
+torch.backends.cuda.matmul.allow_tf32 = True
+
 # Print hardware information
 pynvml.nvmlInit()
 handle = pynvml.nvmlDeviceGetHandleByIndex(0)
@@ -103,7 +115,9 @@ model_config = BertConfig(
 )
 # model = BertForMaskedLM(model_config)
 model = NeuralBertForMaskedLM(model_config)
+model.to(device)
 model = torch.compile(model, mode='reduce-overhead')
+
 print("Parameters:", sum(p.numel() for p in model.parameters()))
 
 tokenizer = BertTokenizerFast(tokenizer_file=str(TOKENIZER_PATH))
