@@ -37,8 +37,8 @@ class NeuralLMBlock(nn.Module):
 
     def forward(self, inputs):
         output = inputs
-        output = output + self.ln1(self.vnn(output))
-        output = output + self.ln2(self.ffn(output))
+        output = self.ln1(output + self.vnn(output))
+        output = self.ln2(output + self.ffn(output))
         return output
     
     def norm(self, inputs):
