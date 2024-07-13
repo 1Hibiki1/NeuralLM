@@ -32,8 +32,7 @@ class NeuralLMBlock(nn.Module):
         self.ffn = nn.Sequential(
             nn.Linear(dim, int(dim*up_proj_factor)),
             nn.GELU(),
-            nn.Linear(int(dim*up_proj_factor), dim),
-            nn.Dropout(0.2)
+            nn.Linear(int(dim*up_proj_factor), dim)
         )
         self.ln2 = nn.LayerNorm(dim)
 
