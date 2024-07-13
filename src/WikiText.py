@@ -12,8 +12,6 @@ from typing import Iterator
 import time
 
 import datasets
-import matplotlib.pyplot as plt
-import pandas as pd
 import pynvml
 from magic_timer import MagicTimer
 from tokenizers import BertWordPieceTokenizer, Regex, normalizers
@@ -39,6 +37,7 @@ print(f"Using {device} device")
 
 # if using a100 or h100, makes much faster (?)
 torch.backends.cuda.matmul.allow_tf32 = True
+torch.set_float32_matmul_precision('high')
 
 # Print hardware information
 pynvml.nvmlInit()
@@ -116,7 +115,7 @@ model_config = BertConfig(
 # model = BertForMaskedLM(model_config)
 model = NeuralBertForMaskedLM(model_config)
 model.to(device)
-model = torch.compile(model, mode='reduce-overhead')
+model = torch.compile(model)
 
 print("Parameters:", sum(p.numel() for p in model.parameters()))
 
