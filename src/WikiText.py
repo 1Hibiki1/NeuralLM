@@ -103,6 +103,7 @@ model_config = BertConfig(
 )
 # model = BertForMaskedLM(model_config)
 model = NeuralBertForMaskedLM(model_config)
+model = torch.compile(model, mode='reduce-overhead')
 print("Parameters:", sum(p.numel() for p in model.parameters()))
 
 tokenizer = BertTokenizerFast(tokenizer_file=str(TOKENIZER_PATH))
