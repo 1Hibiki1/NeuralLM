@@ -58,10 +58,10 @@ class NeuralBertModel(BertPreTrainedModel):
 
         self.embeddings = BertEmbeddings(config)
         N_LAYERS = 5    # (including input layer)
-        N_BLOCKS = 7
+        N_BLOCKS = 16
         self.encoder = NeuralLMEncoder(
             # [config.max_position_embeddings]*N_LAYERS,
-            [config.max_position_embeddings, 1024, 1024, 1024, config.max_position_embeddings],
+            [config.max_position_embeddings, 1024, 1024, config.max_position_embeddings],
             config.hidden_size,
             N_BLOCKS,
             device
