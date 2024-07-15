@@ -53,6 +53,7 @@ LIMIT_DATASET = None
 RANDOM_SEED = 42
 NUM_TOKENIZER_TRAINING_ITEMS = 1_000_000  # I made this up, but it seems reasonable
 VOCAB_SIZE = 32_768  # from Cramming
+# ~310 probably good for 80GB gpu
 DEVICE_BATCH_SIZE = 36  # adjust to get near 100% gpu memory use
 MODEL_MAX_SEQ_LEN = 128  # from Cramming
 
@@ -154,7 +155,7 @@ data_collator = DataCollatorForLanguageModeling(
 training_args = TrainingArguments(
     # Optimizer values are from Cramming
     learning_rate=1e-3,
-    warmup_ratio=0.5,
+    warmup_ratio=0.1,
     adam_beta1=0.9,
     adam_beta2=0.98,
     adam_epsilon=1e-9,
