@@ -53,8 +53,11 @@ LIMIT_DATASET = None
 RANDOM_SEED = 42
 NUM_TOKENIZER_TRAINING_ITEMS = 1_000_000  # I made this up, but it seems reasonable
 VOCAB_SIZE = 32_768  # from Cramming
-# ~310 probably good for 80GB gpu
-DEVICE_BATCH_SIZE = 36  # adjust to get near 100% gpu memory use
+# ~310 probably good for 80GB gpu (not tested)
+# 150 OOM on 40gb gpu
+# 100 OOM on 40gb gpu
+# 60 = 31GB on A100-40GB
+DEVICE_BATCH_SIZE = 70  # adjust to get near 100% gpu memory use
 MODEL_MAX_SEQ_LEN = 128  # from Cramming
 
 gradient_accumulation_steps = 2048 // DEVICE_BATCH_SIZE  # roughly based on Cramming

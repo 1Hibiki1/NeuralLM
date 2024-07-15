@@ -15,7 +15,7 @@ class NeuralLMConfig:
     ) -> None:
         self.embedding_dim = embedding_dim
         self.n_input = n_input
-        self.layer_config = layer_config
+        self.layer_config = [n_input] + layer_config
         self.n_blocks = n_blocks
         self.ffn_up_proj_factor = ffn_up_proj_factor
 
@@ -42,14 +42,14 @@ class VNN(nn.Module):
 class NeuralLMFFN(nn.Module):
     def __init__(self, config: NeuralLMConfig):
         super(NeuralLMFFN, self).__init__()
-        # self.up_proj = nn.Linear(config.embedding_dim, int(config.embedding_dim*config.ffn_up_proj_factor), bias=False)
-        self.up_proj = KANLinear(config.embedding_dim, int(config.embedding_dim*config.ffn_up_proj_factor))
+        self.up_proj = nn.Linear(config.embedding_dim, int(config.embedding_dim*config.ffn_up_proj_factor), bias=False)
+        # self.up_proj = KANLinear(config.embedding_dim, int(config.embedding_dim*config.ffn_up_proj_factor))
         nn.init.xavier_uniform_(self.up_proj, gain=nn.init.calculate_gain('relu'))
 
         self.gelu = nn.GELU()
 
-        # self.down_proj = nn.Linear(int(config.embedding_dim*config.ffn_up_proj_factor), config.embedding_dim, bias=False)
-        self.down_proj = KANLinear(int(config.embedding_dim*config.ffn_up_proj_factor), config.embedding_dim)
+        self.down_proj = nn.Linear(int(config.embedding_dim*config.ffn_up_proj_factor), config.embedding_dim, bias=False)
+        # self.down_proj = KANLinear(int(config.embedding_dim*config.ffn_up_proj_factor), config.embedding_dim)
         nn.init.xavier_uniform_(self.down_proj)
 
     def forward(self, inputs):

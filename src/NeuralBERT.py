@@ -25,7 +25,7 @@ from transformers.modeling_attn_mask_utils import (
 )
 from typing import List, Optional, Tuple, Union
 
-from NeuralLM import VNN, NeuralLMBlock, NeuralLMEncoder
+from NeuralLM import VNN, NeuralLMBlock, NeuralLMEncoder, NeuralLMConfig
 
 
 class NeuralBertModel(BertPreTrainedModel):
@@ -51,10 +51,12 @@ class NeuralBertModel(BertPreTrainedModel):
         N_LAYERS = 5    # (including input layer)
         N_BLOCKS = 12
         self.encoder = NeuralLMEncoder(
-            # [config.max_position_embeddings]*N_LAYERS,
-            [config.max_position_embeddings, 1024, 1024, 1024, config.max_position_embeddings],
-            config.hidden_size,
-            N_BLOCKS
+            NeuralLMConfig(
+                config.hidden_size,
+                config.max_position_embeddings,
+                [1024, 1024, 1024, config.max_position_embeddings],
+                N_BLOCKS
+            )
         )
 
         self.pooler = BertPooler(config) if add_pooling_layer else None
