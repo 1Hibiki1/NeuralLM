@@ -44,13 +44,13 @@ class NeuralLMFFN(nn.Module):
         super(NeuralLMFFN, self).__init__()
         self.up_proj = nn.Linear(config.embedding_dim, int(config.embedding_dim*config.ffn_up_proj_factor), bias=False)
         # self.up_proj = KANLinear(config.embedding_dim, int(config.embedding_dim*config.ffn_up_proj_factor))
-        nn.init.xavier_uniform_(self.up_proj, gain=nn.init.calculate_gain('relu'))
+        nn.init.xavier_uniform_(self.up_proj.weight.data, gain=nn.init.calculate_gain('relu'))
 
         self.gelu = nn.GELU()
 
         self.down_proj = nn.Linear(int(config.embedding_dim*config.ffn_up_proj_factor), config.embedding_dim, bias=False)
         # self.down_proj = KANLinear(int(config.embedding_dim*config.ffn_up_proj_factor), config.embedding_dim)
-        nn.init.xavier_uniform_(self.down_proj)
+        nn.init.xavier_uniform_(self.down_proj.weight.data)
 
     def forward(self, inputs):
         output = inputs
