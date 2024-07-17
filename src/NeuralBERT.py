@@ -49,7 +49,7 @@ class NeuralBertModel(BertPreTrainedModel):
 
         self.embeddings = BertEmbeddings(config)
         N_LAYERS = 5    # (including input layer)
-        N_BLOCKS = 12
+        N_BLOCKS = 16
         self.encoder = NeuralLMEncoder(
             NeuralLMConfig(
                 config.hidden_size,
